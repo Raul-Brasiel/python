@@ -20,6 +20,4 @@ else:
 
 print(f'Vetor: {vetor}')
 
-vetor = organizar_lista(vetor,qtd)
-
-print(f'Vetor organizado: {vetor}')
+print(f'Vetor: {organizar_lista(vetor,qtd)}')
