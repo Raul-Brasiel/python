@@ -2,15 +2,14 @@ import random
 
 def organizar_lista(vetor,qtd):
   for i in range(1, qtd):
-    index = -1
-    for j in range(i,-1,-1):
-      if vetor[i] < vetor[j]:
-        index = j
-    if index > -1:
-      valor = vetor[i]
-      vetor.pop(i)
-      vetor.insert(index, valor)
-      print(f'{vetor}')
+    valor = vetor[i]
+    j = i - 1
+    
+    while j >= 0 and vetor[j] > valor:
+      vetor[j + 1] = vetor[j]
+      j -= 1
+    vetor[j + 1] = valor
+    print(vetor)
   return vetor
 
 while True:
