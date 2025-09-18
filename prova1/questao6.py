@@ -7,7 +7,3 @@ def insertion_sort(v):
             v[j + 1] = v[j]
             j-= 1
         v[j+1] = x
-v = [5,1,2,4,3]
-print(v)
-insertion_sort(v)
-print(v)
