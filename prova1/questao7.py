@@ -1,4 +1,4 @@
-def organizar_lista_recursivo(vetor, qtd=None):
+def insertion_sort_recursivo(vetor, qtd=None):
     if qtd is None:
         qtd = len(vetor)
     if qtd <= 1:
