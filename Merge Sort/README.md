@@ -14,5 +14,3 @@ O **Merge Sort** segue o paradigma **Dividir para Conquistar (Divide and Conquer
 3. **Combinação:** as listas ordenadas são intercaladas, formando listas maiores até chegar ao vetor final ordenado.
 
 Esse processo garante que todos os elementos sejam comparados de forma eficiente, mantendo uma **complexidade de tempo O(n log n)** em todos os casos (melhor, médio e pior).
-
----
