@@ -1,7 +1,6 @@
 # 🧩 Merge Sort em Python
 
-Este projeto implementa o algoritmo de ordenação **Merge Sort**, um dos métodos mais eficientes e estáveis para organizar grandes volumes de dados.  
-O código está totalmente comentado para facilitar o entendimento de seu funcionamento interno.
+Esse código implementa o algoritmo de ordenação **Merge Sort**, um dos métodos mais eficientes e estáveis para organizar grandes volumes de dados.  
 
 ---
 
