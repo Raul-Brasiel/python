@@ -1,0 +1,109 @@
+class No:
+    def __init__(self, valor):
+        self.valor = valor
+        self.esquerda = None
+        self.direita = None
+        self.altura = 1  # Um novo nó (folha) começa com altura 1
+
+def obter_altura(no):
+    if not no:
+        return 0
+    return no.altura
+
+def obter_fator_balanceamento(no):
+    if not no:
+        return 0
+    return obter_altura(no.esquerda) - obter_altura(no.direita)
+
+def rotacao_direita(y):
+    print(f"    -> (Rotação Direita em {y.valor})")
+    
+    x = y.esquerda
+    T2 = x.direita
+
+    x.direita = y
+    y.esquerda = T2
+
+    y.altura = 1 + max(obter_altura(y.esquerda), obter_altura(y.direita))
+    x.altura = 1 + max(obter_altura(x.esquerda), obter_altura(x.direita))
+
+    return x
+
+def rotacao_esquerda(x):
+    print(f"    -> (Rotação Esquerda em {x.valor})")
+    
+    y = x.direita
+    T2 = y.esquerda
+
+    y.esquerda = x
+    x.direita = T2
+
+    x.altura = 1 + max(obter_altura(x.esquerda), obter_altura(x.direita))
+    y.altura = 1 + max(obter_altura(y.esquerda), obter_altura(y.direita))
+
+    return y
+
+def inserir(no, valor):
+    if not no:
+        return No(valor)
+    
+    if valor < no.valor:
+        no.esquerda = inserir(no.esquerda, valor)
+    elif valor > no.valor:
+        no.direita = inserir(no.direita, valor)
+    else:
+        return no
+
+    no.altura = 1 + max(obter_altura(no.esquerda), obter_altura(no.direita))
+
+    fator_bal = obter_fator_balanceamento(no)
+
+    if fator_bal > 1 and valor < no.esquerda.valor:
+        return rotacao_direita(no)
+    if fator_bal < -1 and valor > no.direita.valor:
+        return rotacao_esquerda(no)
+    if fator_bal > 1 and valor > no.esquerda.valor:
+        no.esquerda = rotacao_esquerda(no.esquerda)
+        return rotacao_direita(no)
+    if fator_bal < -1 and valor < no.direita.valor:
+        no.direita = rotacao_direita(no.direita)
+        return rotacao_esquerda(no)
+
+    return no
+
+def imprimir_arvore(no, nivel=0, prefixo="Raiz: "):
+    if no is not None:
+        print(" " * (nivel * 4) + prefixo + str(no.valor) + 
+              f" (A:{no.altura}, B:{obter_fator_balanceamento(no)})")
+        
+        if no.esquerda is not None or no.direita is not None:
+            if no.esquerda:
+                imprimir_arvore(no.esquerda, nivel + 1, "E: ")
+            else:
+                print(" " * ((nivel + 1) * 4) + "E: Vazio")
+            if no.direita:
+                imprimir_arvore(no.direita, nivel + 1, "D: ")
+            else:
+                print(" " * ((nivel + 1) * 4) + "D: Vazio")
+
+if __name__ == "__main__":
+    raiz = None
+    
+    print("--- Exemplo 1: Rotação Simples (Direita-Direita) ---")
+    valores_rr = [10, 20, 30]
+    
+    for val in valores_rr:
+        print(f"\nInserindo {val}...")
+        raiz = inserir(raiz, val)
+        imprimir_arvore(raiz)
+
+    print("\n" + "="*40 + "\n")
+    print("--- Exemplo 2: Rotação Dupla (Esquerda-Direita) ---")
+    
+    raiz = None # Reinicia a árvore
+    valores_lr = [30, 10, 20] # Força uma rotação LR
+
+    for val in valores_lr:
+        print(f"\nInserindo {val}...")
+        raiz = inserir(raiz, val)
+        imprimir_arvore(raiz)
