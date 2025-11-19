@@ -3,107 +3,133 @@ class No:
         self.valor = valor
         self.esquerda = None
         self.direita = None
-        self.altura = 1  # Um novo nó (folha) começa com altura 1
+        self.altura = 1 # Começa com 1 pois é uma folha.
 
-def obter_altura(no):
-    if not no:
+def pegar_altura(no):
+    #Retorna a altura 
+    if not no: #Se for None, retorna 0
         return 0
     return no.altura
 
-def obter_fator_balanceamento(no):
+def balanceamento(no):
+    #Calcula se o nó está pesado para esquerda (+) ou direita (-)
     if not no:
         return 0
-    return obter_altura(no.esquerda) - obter_altura(no.direita)
+    return pegar_altura(no.esquerda) - pegar_altura(no.direita)
+
+# --- Funções de Rotação ---
 
 def rotacao_direita(y):
-    print(f"    -> (Rotação Direita em {y.valor})")
-    
+    print(f"  -> Rotação Direita em {y.valor}")
     x = y.esquerda
-    T2 = x.direita
+    a = x.direita
 
+    # Rotação
     x.direita = y
-    y.esquerda = T2
+    y.esquerda = a
 
-    y.altura = 1 + max(obter_altura(y.esquerda), obter_altura(y.direita))
-    x.altura = 1 + max(obter_altura(x.esquerda), obter_altura(x.direita))
+    # Atualiza alturas (primeiro y, depois x, pois x agora é pai de y)
+    y.altura = 1 + max(pegar_altura(y.esquerda), pegar_altura(y.direita))
+    x.altura = 1 + max(pegar_altura(x.esquerda), pegar_altura(x.direita))
 
-    return x
+    return x # Nova raiz
 
 def rotacao_esquerda(x):
-    print(f"    -> (Rotação Esquerda em {x.valor})")
-    
+    print(f"  -> Rotação Esquerda em {x.valor}")
     y = x.direita
-    T2 = y.esquerda
+    a = y.esquerda
 
+    # Rotação
     y.esquerda = x
-    x.direita = T2
+    x.direita = a
 
-    x.altura = 1 + max(obter_altura(x.esquerda), obter_altura(x.direita))
-    y.altura = 1 + max(obter_altura(y.esquerda), obter_altura(y.direita))
+    # Atualiza alturas
+    x.altura = 1 + max(pegar_altura(x.esquerda), pegar_altura(x.direita))
+    y.altura = 1 + max(pegar_altura(y.esquerda), pegar_altura(y.direita))
 
-    return y
+    return y # Nova raiz
 
-def inserir(no, valor):
-    if not no:
-        return No(valor)
+# --- Função de Inserção com Balanceamento AVL ---
+
+def inserir(raiz, valor):
+    # Inserção
+    if raiz is None:
+        return No(valor) #Se não tiver raiz
     
-    if valor < no.valor:
-        no.esquerda = inserir(no.esquerda, valor)
-    elif valor > no.valor:
-        no.direita = inserir(no.direita, valor)
+    if valor < raiz.valor: #Se o valor for menor que a raiz
+        raiz.esquerda = inserir(raiz.esquerda, valor)
+    elif valor > raiz.valor: #Se o valor for maior que a raiz
+        raiz.direita = inserir(raiz.direita, valor)
     else:
-        return no
+        return raiz
 
-    no.altura = 1 + max(obter_altura(no.esquerda), obter_altura(no.direita))
+    #Atualiza a altura do nó ancestral
+    raiz.altura = 1 + max(pegar_altura(raiz.esquerda), pegar_altura(raiz.direita))
 
-    fator_bal = obter_fator_balanceamento(no)
+    #Verifica se ficou desbalanceado
+    fator = balanceamento(raiz)
 
-    if fator_bal > 1 and valor < no.esquerda.valor:
-        return rotacao_direita(no)
-    if fator_bal < -1 and valor > no.direita.valor:
-        return rotacao_esquerda(no)
-    if fator_bal > 1 and valor > no.esquerda.valor:
-        no.esquerda = rotacao_esquerda(no.esquerda)
-        return rotacao_direita(no)
-    if fator_bal < -1 and valor < no.direita.valor:
-        no.direita = rotacao_direita(no.direita)
-        return rotacao_esquerda(no)
+    #Aplica Rotações se necessário (4 Casos)
 
-    return no
+    # Caso 1: Pesado à Esquerda
+    if fator > 1 and valor < raiz.esquerda.valor:
+        return rotacao_direita(raiz)
 
-def imprimir_arvore(no, nivel=0, prefixo="Raiz: "):
-    if no is not None:
-        print(" " * (nivel * 4) + prefixo + str(no.valor) + 
-              f" (A:{no.altura}, B:{obter_fator_balanceamento(no)})")
+    # Caso 2: Pesado à Direita
+    if fator < -1 and valor > raiz.direita.valor:
+        return rotacao_esquerda(raiz)
+
+    # Caso 3: Pesado à Esquerda-Direita
+    if fator > 1 and valor > raiz.esquerda.valor:
+        raiz.esquerda = rotacao_esquerda(raiz.esquerda)
+        return rotacao_direita(raiz)
+
+    # Caso 4: Pesado à Direita-Esquerda
+    if fator < -1 and valor < raiz.direita.valor:
+        raiz.direita = rotacao_direita(raiz.direita)
+        return rotacao_esquerda(raiz)
+
+    return raiz
+
+#função de Lista Ordenada
+def gerar_lista_ordenada(no):
+    lista = [] #Cria uma lista vazia para armazenar os números.
+    
+    #Define uma função interna para fazer o trabalho pesado da recursão.
+    def _percorrer(atual): #Recebe o nó atual
         
-        if no.esquerda is not None or no.direita is not None:
-            if no.esquerda:
-                imprimir_arvore(no.esquerda, nivel + 1, "E: ")
-            else:
-                print(" " * ((nivel + 1) * 4) + "E: Vazio")
-            if no.direita:
-                imprimir_arvore(no.direita, nivel + 1, "D: ")
-            else:
-                print(" " * ((nivel + 1) * 4) + "D: Vazio")
-
-if __name__ == "__main__":
-    raiz = None
+        # Se o nó for None (Chegou ao fim de um ramo), para e volta.
+        if atual is not None:
+            _percorrer(atual.esquerda) #Percorrer esquerda (números menores)
+            
+            lista.append(atual.valor) #Adiciona o valor do nó atual na lista
+            
+            _percorrer(atual.direita) #Percorrer direita (números maiores)
+            
+    # Chama a função interna pela primeira vez, começando pela raiz da árvore.
+    _percorrer(no)
     
-    print("--- Exemplo 1: Rotação Simples (Direita-Direita) ---")
-    valores_rr = [10, 20, 30]
-    
-    for val in valores_rr:
-        print(f"\nInserindo {val}...")
-        raiz = inserir(raiz, val)
-        imprimir_arvore(raiz)
+    return lista
 
-    print("\n" + "="*40 + "\n")
-    print("--- Exemplo 2: Rotação Dupla (Esquerda-Direita) ---")
-    
-    raiz = None # Reinicia a árvore
-    valores_lr = [30, 10, 20] # Força uma rotação LR
+def arvore(no, nivel=0):
+    if no is not None: #Se existe No
+        if nivel == 0: #Se estiver na raiz
+            print(f"Raiz: {no.valor}")
+        else:
+            prefixo = ' ' * (4 * nivel)
+            print(f"{prefixo}-> {no.valor}")
+        arvore(no.esquerda, nivel + 1) #Chama recursivamente para esquerda
+        arvore(no.direita, nivel + 1) #Chama recursivamente para direita
 
-    for val in valores_lr:
-        print(f"\nInserindo {val}...")
-        raiz = inserir(raiz, val)
-        imprimir_arvore(raiz)
+raiz = None
+lista = [5,2,1,9,7,8]
+print(f"Inserindo valores: {lista}\n")
+
+for valor in lista:
+    print(f"Inserindo {valor}...")
+    raiz = inserir(raiz, valor)
+
+print("\n--- Estrutura Final da Árvore (Balanceada) ---")
+arvore(raiz)
+
+print("\nLista Ordenada: ", gerar_lista_ordenada(raiz))
