@@ -1,135 +1,240 @@
+# Definição da classe que representa cada nó da árvore
 class No:
     def __init__(self, valor):
+        # A valor é o valor armazenado neste nó
         self.valor = valor
+        # Inicia o filho à esquerda como null
         self.esquerda = None
+        # Inicia o filho à direita como null
         self.direita = None
-        self.altura = 1 # Começa com 1 pois é uma folha.
+        # A altura de um novo nó é sempre 1, por ser uma folha
+        self.altura = 1
 
-def pegar_altura(no):
-    #Retorna a altura 
-    if not no: #Se for None, retorna 0
-        return 0
-    return no.altura
 
-def balanceamento(no):
-    #Calcula se o nó está pesado para esquerda (+) ou direita (-)
-    if not no:
-        return 0
-    return pegar_altura(no.esquerda) - pegar_altura(no.direita)
+# Definição da Árvore e suas operações
+class ArvoreAVL:
+    # Função auxiliar para pegar a altura de um nó de forma segura
+    def obter_altura(self, no):
+        # Se o nó não existir (for None), a altura é 0
+        if not no:
+            return 0
+        # Se não, retorna a altura armazenada no objeto nó
+        return no.altura
 
-# --- Funções de Rotação ---
+    # Função para calcular o Fator de Balanceamento
+    def balanceamento(self, no):
+        # Se o nó não existir, está balanceado
+        if not no:
+            return 0
+        return self.obter_altura(no.esquerda) - self.obter_altura(no.direita) # Fator = Altura da Esquerda - Altura da Direita
 
-def rotacao_direita(y):
-    print(f"  -> Rotação Direita em {y.valor}")
-    x = y.esquerda
-    a = x.direita
+    # Função interna para atualizar a altura de um nó após modificações
+    def _atualizar_altura(self, no):
+        no.altura = 1 + max(self.obter_altura(no.esquerda), self.obter_altura(no.direita)) # A altura é 1 + a maior altura entre seus filhos
 
-    # Rotação
-    x.direita = y
-    y.esquerda = a
+    # Rotação simples à direita, usada quando a árvore está pesada para o lado esquerdo
+    def rotacao_direita(self, y):
+        # y é a raiz que está desbalanceada
+        # x será a nova raiz, que é o filho à esquerda de y
+        x = y.esquerda
+        
+        # av2 é a subárvore à direita de x
+        av2 = x.direita
 
-    # Atualiza alturas (primeiro y, depois x, pois x agora é pai de y)
-    y.altura = 1 + max(pegar_altura(y.esquerda), pegar_altura(y.direita))
-    x.altura = 1 + max(pegar_altura(x.esquerda), pegar_altura(x.direita))
+        # A direita de x passa a ser o antigo pai y
+        x.direita = y
+        # A esquerda de y recebe a subárvore av2
+        y.esquerda = av2
 
-    return x # Nova raiz
+        # Atualizar o y primeiro, pois ele agora é filho de x
+        self._atualizar_altura(y)
+        # Depois atualizar x, que é a nova raiz da subárvore
+        self._atualizar_altura(x)
 
-def rotacao_esquerda(x):
-    print(f"  -> Rotação Esquerda em {x.valor}")
-    y = x.direita
-    a = y.esquerda
+        # Retorna x para que o pai anterior aponte para a nova raiz
+        return x
 
-    # Rotação
-    y.esquerda = x
-    x.direita = a
+    # Rotação Simples à Esquerda, usada quando a árvore está pesada para o lado direito
+    def rotacao_esquerda(self, x):
+        # x é a raiz atual desbalanceada
+        # y será a nova raiz
+        y = x.direita
+        
+        # av2 é a subárvore à esquerda de y
+        av2 = y.esquerda
 
-    # Atualiza alturas
-    x.altura = 1 + max(pegar_altura(x.esquerda), pegar_altura(x.direita))
-    y.altura = 1 + max(pegar_altura(y.esquerda), pegar_altura(y.direita))
+        # A esquerda de y passa a ser o antigo pai x
+        y.esquerda = x
+        # A direita de x recebe a subárvore av2
+        x.direita = av2
 
-    return y # Nova raiz
+        # Atualiza o nó que desceu primeiro
+        self._atualizar_altura(x)
+        # Atualiza o nó que subiu depois
+        self._atualizar_altura(y)
 
-# --- Função de Inserção com Balanceamento AVL ---
+        # Retorna y como nova raiz
+        return y
 
-def inserir(raiz, valor):
-    # Inserção
-    if raiz is None:
-        return No(valor) #Se não tiver raiz
+    def inserir(self, raiz, valor):        
+        # Se estiver vazio, criamos o nó aqui
+        if not raiz:
+            return No(valor)
+        
+        # Se o valor for menor, vai para a esquerda
+        elif valor < raiz.valor:
+            raiz.esquerda = self.inserir(raiz.esquerda, valor)
+        # Se o valor for maior, vai para a direita
+        else:
+            raiz.direita = self.inserir(raiz.direita, valor)
+        
+        # Atualiza a altura do nó atual
+        self._atualizar_altura(raiz)
+
+        # Verifica se este nó ficou desbalanceado
+        balanceamento = self.balanceamento(raiz)
+
+        # Se o nó estiver desbalanceado, há 4 casos possíveis que devemos verificar
+
+        # Esquerda-Esquerda: O nó está pesado para a esquerda, e o novo valor foi inserido na esquerda do filho esquerdo
+        if balanceamento > 1 and valor < raiz.esquerda.valor:
+            return self.rotacao_direita(raiz)
+
+        # Direita-Direita: O nó está pesado para a direita, e o novo valor foi inserido na direita do filho direito
+        if balanceamento < -1 and valor > raiz.direita.valor:
+            return self.rotacao_esquerda(raiz)
+
+        # Esquerda-Direita: Pesado para a esquerda, mas o valor foi inserido na direita do filho esquerdo
+        if balanceamento > 1 and valor > raiz.esquerda.valor:
+            # Rotaciona o filho para a esquerda
+            raiz.esquerda = self.rotacao_esquerda(raiz.esquerda)
+            # Depois rotaciona o nó atual para a direita
+            return self.rotacao_direita(raiz)
+
+        # Direita-Esquerda: Pesado para a direita, mas o valor foi inserido na esquerda do filho direito
+        if balanceamento < -1 and valor < raiz.direita.valor:
+            # Primeiro rotaciona o filho para a direita
+            raiz.direita = self.rotacao_direita(raiz.direita)
+            # Depois rotaciona o nó atual para a esquerda
+            return self.rotacao_esquerda(raiz)
+
+        # Se não teve rotação, retorna a raiz atual sem alterações
+        return raiz
     
-    if valor < raiz.valor: #Se o valor for menor que a raiz
-        raiz.esquerda = inserir(raiz.esquerda, valor)
-    elif valor > raiz.valor: #Se o valor for maior que a raiz
-        raiz.direita = inserir(raiz.direita, valor)
-    else:
+    # Função para encontrar o menor valor de uma subárvore, que é usada quando um nó com 2 filhos é removido
+    def obter_menor(self, no):
+        # Começa pelo nó recebido
+        atual = no
+        # Vai descendo tudo para a esquerda até achar a ponta
+        while atual.esquerda is not None:
+            atual = atual.esquerda
+        # Retorna o nó mais à esquerda
+        return atual
+
+    def remover(self, raiz, valor):        
+        # Se a árvore for vazia ou não encontrar o nó
+        if not raiz:
+            return raiz
+
+        # Navegação até o nó
+        if valor < raiz.valor:
+            raiz.esquerda = self.remover(raiz.esquerda, valor)
+        elif valor > raiz.valor:
+            raiz.direita = self.remover(raiz.direita, valor)
+        else: # O nó que será removido foi encontrado            
+            # Nó com apenas um filho ou nenhum
+            if raiz.esquerda is None:
+                temp = raiz.direita
+                raiz = None # Remove referência
+                return temp # Retorna o filho da direita para o pai
+            elif raiz.direita is None:
+                temp = raiz.esquerda
+                raiz = None # Remove referência
+                return temp # Retorna o filho da esquerda para o pai
+
+            # Nó com dois filhos: pegar o menor valor da subárvore direita
+            temp = self.obter_menor(raiz.direita)
+            
+            # Copia o valor do sucessor para o nó atual, substituindo o valor a ser deletado
+            raiz.valor = temp.valor
+            
+            # É chamado a remoção recursivamente na direita para apagar o nó sucessor original
+            raiz.direita = self.remover(raiz.direita, temp.valor)
+
+        # Se a árvore tinha apenas um nó e ele foi removido, retorna None
+        if raiz is None:
+            return raiz
+
+        # Atualizar altura do nó atual (recursão voltando)
+        self._atualizar_altura(raiz)
+
+        # Verificar fator de balanceamento
+        balanceamento = self.balanceamento(raiz)
+
+        # Rebalancear, se necessário
+        # Caso Esquerda-Esquerda
+        if balanceamento > 1 and self.balanceamento(raiz.esquerda) >= 0:
+            return self.rotacao_direita(raiz)
+
+        # Caso Esquerda-Direita
+        if balanceamento > 1 and self.balanceamento(raiz.esquerda) < 0:
+            raiz.esquerda = self.rotacao_esquerda(raiz.esquerda)
+            return self.rotacao_direita(raiz)
+
+        # Caso Direita-Direita
+        if balanceamento < -1 and self.balanceamento(raiz.direita) <= 0:
+            return self.rotacao_esquerda(raiz)
+
+        # Caso Direita-Esquerda
+        if balanceamento < -1 and self.balanceamento(raiz.direita) > 0:
+            raiz.direita = self.rotacao_direita(raiz.direita)
+            return self.rotacao_esquerda(raiz)
+
+        # Retorna a raiz balanceada
         return raiz
 
-    #Atualiza a altura do nó ancestral
-    raiz.altura = 1 + max(pegar_altura(raiz.esquerda), pegar_altura(raiz.direita))
+    def buscar(self, raiz, valor):
+        # Se a raiz é nula ou o valor é igual
+        if raiz is None or raiz.valor == valor:
+            return raiz
+        # Se a valor é menor, busca na esquerda
+        if valor < raiz.valor:
+            return self.buscar(raiz.esquerda, valor)
+        # Se a valor é maior, busca na direita
+        return self.buscar(raiz.direita, valor)
 
-    #Verifica se ficou desbalanceado
-    fator = balanceamento(raiz)
+    def imprimir_arvore(self, no, nivel=0, prefixo="Raiz: "):
+        if no is None:
+            return
 
-    #Aplica Rotações se necessário (4 Casos)
+        # Imprime o lado direito da árvore
+        self.imprimir_arvore(no.direita, nivel + 1, " /-- ")
 
-    # Caso 1: Pesado à Esquerda
-    if fator > 1 and valor < raiz.esquerda.valor:
-        return rotacao_direita(raiz)
+        # Imprime o nó atual
+        espaco = " " * (nivel * 6) # Define a indentação
+        print(f"{espaco}{prefixo}{no.valor}")
 
-    # Caso 2: Pesado à Direita
-    if fator < -1 and valor > raiz.direita.valor:
-        return rotacao_esquerda(raiz)
+        # Imprime o lado esquerdo
+        self.imprimir_arvore(no.esquerda, nivel + 1, " \\-- ")
 
-    # Caso 3: Pesado à Esquerda-Direita
-    if fator > 1 and valor > raiz.esquerda.valor:
-        raiz.esquerda = rotacao_esquerda(raiz.esquerda)
-        return rotacao_direita(raiz)
+# Main
+if __name__ == "__main__":
+    arvore = ArvoreAVL()
+    raiz = None
 
-    # Caso 4: Pesado à Direita-Esquerda
-    if fator < -1 and valor < raiz.direita.valor:
-        raiz.direita = rotacao_direita(raiz.direita)
-        return rotacao_esquerda(raiz)
-
-    return raiz
-
-#função de Lista Ordenada
-def gerar_lista_ordenada(no):
-    lista = [] #Cria uma lista vazia para armazenar os números.
+    lista = [1,2,3,4,5,6]
+    print(f"Inserindo: {lista}\n")
     
-    #Define uma função interna para fazer o trabalho pesado da recursão.
-    def _percorrer(atual): #Recebe o nó atual
-        
-        # Se o nó for None (Chegou ao fim de um ramo), para e volta.
-        if atual is not None:
-            _percorrer(atual.esquerda) #Percorrer esquerda (números menores)
-            
-            lista.append(atual.valor) #Adiciona o valor do nó atual na lista
-            
-            _percorrer(atual.direita) #Percorrer direita (números maiores)
-            
-    # Chama a função interna pela primeira vez, começando pela raiz da árvore.
-    _percorrer(no)
+    for numero in lista:
+        raiz = arvore.inserir(raiz, numero)
+
+    print("----- Árvore -----")
+    arvore.imprimir_arvore(raiz)
+    print("\n" + "="*40 + "\n")
     
-    return lista
-
-def arvore(no, nivel=0):
-    if no is not None: #Se existe No
-        if nivel == 0: #Se estiver na raiz
-            print(f"Raiz: {no.valor}")
-        else:
-            prefixo = ' ' * (4 * nivel)
-            print(f"{prefixo}-> {no.valor}")
-        arvore(no.esquerda, nivel + 1) #Chama recursivamente para esquerda
-        arvore(no.direita, nivel + 1) #Chama recursivamente para direita
-
-raiz = None
-lista = [5,2,1,9,7,8]
-print(f"Inserindo valores: {lista}\n")
-
-for valor in lista:
-    print(f"Inserindo {valor}...")
-    raiz = inserir(raiz, valor)
-
-print("\n--- Estrutura Final da Árvore (Balanceada) ---")
-arvore(raiz)
-
-print("\nLista Ordenada: ", gerar_lista_ordenada(raiz))
+    valor_remocao = 2
+    print(f"Removendo o nó {valor_remocao}...")
+    raiz = arvore.remover(raiz, valor_remocao)
+    
+    print("Árvore após remoção: ")
+    arvore.imprimir_arvore(raiz)
